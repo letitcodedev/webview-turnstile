@@ -15,48 +15,6 @@ import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 // Use a real Safari mobile user agent to avoid bot detection
 const USER_AGENT_IOS = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1';
 
-// JavaScript to inject to make the WebView appear more like a real browser
-const INJECTED_JAVASCRIPT = `
-(function() {
-  // Override webdriver detection
-  Object.defineProperty(navigator, 'webdriver', {
-    get: () => undefined,
-  });
-  
-  // Ensure proper platform detection
-  Object.defineProperty(navigator, 'platform', {
-    get: () => 'iPhone',
-  });
-  
-  // Mock plugins array
-  Object.defineProperty(navigator, 'plugins', {
-    get: () => [1, 2, 3, 4, 5],
-  });
-  
-  // Mock languages
-  Object.defineProperty(navigator, 'languages', {
-    get: () => ['en-US', 'en'],
-  });
-  
-  // Ensure chrome is undefined (Safari doesn't have it)
-  window.chrome = undefined;
-  
-  // Mock permissions API if not present
-  if (!navigator.permissions) {
-    navigator.permissions = {
-      query: () => Promise.resolve({ state: 'granted' }),
-    };
-  }
-  
-  // Ensure proper touch support
-  Object.defineProperty(navigator, 'maxTouchPoints', {
-    get: () => 5,
-  });
-  
-  true;
-})();
-`;
-
 export default function App() {
   const [url, setUrl] = useState('');
   const [inputUrl, setInputUrl] = useState('');
@@ -100,16 +58,12 @@ export default function App() {
               // Essential settings
               javaScriptEnabled={true}
               domStorageEnabled={true}
-              startInLoadingState={true}
 
               // User agent to appear as real Safari browser
               userAgent={USER_AGENT_IOS}
 
-              // Inject JavaScript before page loads to avoid bot detection
-              injectedJavaScriptBeforeContentLoaded={INJECTED_JAVASCRIPT}
-
               // Allow all content
-              mixedContentMode="compatibility"
+              mixedContentMode="always"
               allowsInlineMediaPlayback={true}
               mediaPlaybackRequiresUserAction={false}
 
@@ -117,31 +71,9 @@ export default function App() {
               allowsBackForwardNavigationGestures={true}
               allowsLinkPreview={true}
               sharedCookiesEnabled={true}
-              thirdPartyCookiesEnabled={true}
 
-              // Cache and storage
-              cacheEnabled={true}
-              incognito={false}
-
-              // iOS specific settings
-              allowsFullscreenVideo={true}
-              contentMode="mobile"
-
-              // Handle SSL errors gracefully
-              originWhitelist={['*']}
-
-              // Enable JavaScript focus/blur events
-              keyboardDisplayRequiresUserAction={false}
-
-              onError={(syntheticEvent) => {
-                const { nativeEvent } = syntheticEvent;
-                console.warn('WebView error:', nativeEvent);
-              }}
-
-              onHttpError={(syntheticEvent) => {
-                const { nativeEvent } = syntheticEvent;
-                console.warn('HTTP error:', nativeEvent.statusCode);
-              }}
+              // https://developers.cloudflare.com/turnstile/get-started/mobile-implementation/#network-access
+              originWhitelist={["http://*", "https://*", "about:blank", "about:srcdoc"]}
             />
           </View>
         </SafeAreaView>
